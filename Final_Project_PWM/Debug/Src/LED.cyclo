@@ -1,0 +1,4 @@
+../Src/LED.c:7:6:configure_LED_pin	1
+../Src/LED.c:23:6:turn_on_LED	1
+../Src/LED.c:28:6:turn_off_LED	1
+../Src/LED.c:33:6:toggle_LED	1

@@ -1,0 +1,123 @@
+/*
+ * PWM.c
+ *
+ *  Created on: Dec 4, 2025
+ *      Author: MES.Academic
+ */
+#include "PWM.h"
+#include "stm32l476xx.h"
+#include <stdint.h>
+
+// Global variable to store the most recent PWM duty value (0..1023)
+// Useful for monitoring/debugging in the Expressions window.
+volatile uint16_t pwm_duty = 0;
+
+//-------------------------------------------------------------------------------------------
+//  PWM_Pin_Init
+//  Initialize PA5 as alternate function TIM2_CH1 to output a PWM signal.
+//  This pin is connected to the LD2 LED on the Nucleo-L476 board.
+//-------------------------------------------------------------------------------------------
+void PWM_Pin_Init(void) {
+
+    // 1. Enable the clock of GPIO Port A (for PA5)
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+
+    // 2. Configure PA5 as Alternate Function mode
+    //    MODER5[1:0] = 10: Alternate function
+    GPIOA->MODER &= ~(0b11UL << (2 * 5));     // Clear mode bits for PA5
+    GPIOA->MODER |=  (0b10UL << (2 * 5));     // Set mode to Alternate Function
+
+    // 3. Select Alternate Function AF1 (TIM2_CH1) for PA5
+    //    AFRL5[3:0] = 0001: AF1
+    GPIOA->AFR[0] &= ~(0xFUL << (4 * 5));     // Clear AF bits for PA5
+    GPIOA->AFR[0] |=  (0x1UL << (4 * 5));     // Set AF1 for PA5
+
+    // 4. Output type, speed, and pull-up/down left at default:
+    //    - Push-pull
+    //    - Low speed
+    //    - No pull-up, no pull-down
+}
+
+//-------------------------------------------------------------------------------------------
+//  PWM_Timer_Init
+//  Configure TIM2 Channel 1 to generate a PWM signal on PA5.
+//  The timer period is set to 1023 so that a 10-bit value (0..1023) maps directly to duty.
+//-------------------------------------------------------------------------------------------
+void PWM_Timer_Init(void) {
+
+    // 1. Enable clock for TIM2 on APB1 bus
+    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+
+    // 2. Configure TIM2 prescaler and auto-reload register to set PWM frequency
+    //
+    //    Assuming system clock = 4 MHz (MSI default),
+    //    choose:
+    //      - Prescaler (PSC) = 39  → timer clock = 4 MHz / (39 + 1) = 100 kHz
+    //      - Auto-reload (ARR) = 1023 → PWM frequency ≈ 100 kHz / 1024 ≈ 97.6 Hz
+    //
+    //    This gives a ~100 Hz PWM, smooth enough for LED dimming.
+    TIM2->PSC = 79;          // Prescaler value
+    TIM2->ARR = 999;        // Auto-reload value for 10-bit resolution
+
+    // 3. Configure TIM2 Channel 1 as PWM mode 1
+    //
+    //    PWM mode 1 on OC1:
+    //      - OC1M[2:0] = 110: PWM mode 1
+    //      - OC1PE = 1: enable preload for CCR1
+    //
+    //    CCMR1 register, OC1M bits [6:4], OC1PE bit [3]
+    TIM2->CCMR1 &= ~(TIM_CCMR1_OC1M);               // Clear OC1M bits
+    TIM2->CCMR1 |=  (6U << TIM_CCMR1_OC1M_Pos);     // OC1M = 110: PWM mode 1
+    TIM2->CCMR1 |=  TIM_CCMR1_OC1PE;                // Enable preload for CCR1
+
+    // 4. Enable output for Channel 1
+    //
+    //    CCER register:
+    //      - CC1E = 1: enable compare output on CH1
+    TIM2->CCER |= TIM_CCER_CC1E;
+
+    // 5. Initialize duty cycle to 0% (CCR1 = 0)
+    TIM2->CCR1 = 75;
+
+    // 6. Enable auto-reload preload
+    TIM2->CR1 |= TIM_CR1_ARPE;
+
+    // 7. Generate an update event to load the prescaler and ARR values
+    TIM2->EGR |= TIM_EGR_UG;
+
+    // 8. Enable the counter
+    TIM2->CR1 |= TIM_CR1_CEN;
+}
+
+//-------------------------------------------------------------------------------------------
+//  PWM_Init
+//  High-level function that initializes both the PWM pin and the timer.
+//-------------------------------------------------------------------------------------------
+void PWM_Init(void) {
+
+    // 1. Initialize PA5 pin as TIM2_CH1 in alternate function mode
+    PWM_Pin_Init();
+
+    // 2. Initialize TIM2 Channel 1 for PWM generation
+    PWM_Timer_Init();
+}
+
+//-------------------------------------------------------------------------------------------
+//  PWM_SetDuty
+//  Set the PWM duty cycle for TIM2 Channel 1.
+//
+//  Input:
+//    duty: 10-bit value, 0 to 1023
+//          - 0    → 0% duty cycle (always off)
+//          - 1023 → ≈100% duty cycle (always on)
+//-------------------------------------------------------------------------------------------
+void PWM_SetPulse_us(uint16_t us)
+{
+    if (us < 1000) us = 1000;
+    if (us > 2000) us = 2000;
+
+    // Convert microseconds → timer counts (20 us per count)
+    uint16_t counts = us / 20;
+
+    TIM2->CCR1 = counts;
+}

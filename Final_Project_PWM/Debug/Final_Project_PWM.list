@@ -1,0 +1,1063 @@
+
+Final_Project_PWM.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .isr_vector   0000018c  08000000  08000000  00001000  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .text         0000059c  0800018c  0800018c  0000118c  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .rodata       00000000  08000728  08000728  00002004  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  3 .ARM.extab    00000000  08000728  08000728  00002004  2**0
+                  CONTENTS, READONLY
+  4 .ARM          00000000  08000728  08000728  00002004  2**0
+                  CONTENTS, READONLY
+  5 .preinit_array 00000000  08000728  08000728  00002004  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  6 .init_array   00000004  08000728  08000728  00001728  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  7 .fini_array   00000004  0800072c  0800072c  0000172c  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  8 .data         00000004  20000000  08000730  00002000  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  9 .sram2        00000000  10000000  10000000  00002004  2**0
+                  CONTENTS
+ 10 .bss          00000024  20000004  20000004  00002004  2**2
+                  ALLOC
+ 11 ._user_heap_stack 00000600  20000028  20000028  00002004  2**0
+                  ALLOC
+ 12 .ARM.attributes 00000030  00000000  00000000  00002004  2**0
+                  CONTENTS, READONLY
+ 13 .debug_info   00001673  00000000  00000000  00002034  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 14 .debug_abbrev 000005c5  00000000  00000000  000036a7  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 15 .debug_aranges 00000118  00000000  00000000  00003c70  2**3
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 16 .debug_rnglists 000000b7  00000000  00000000  00003d88  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 17 .debug_macro  0001c76f  00000000  00000000  00003e3f  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 18 .debug_line   00001e49  00000000  00000000  000205ae  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 19 .debug_str    0009ea6b  00000000  00000000  000223f7  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 20 .comment      00000043  00000000  00000000  000c0e62  2**0
+                  CONTENTS, READONLY
+ 21 .debug_frame  00000270  00000000  00000000  000c0ea8  2**2
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 22 .debug_line_str 0000006f  00000000  00000000  000c1118  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+
+Disassembly of section .text:
+
+0800018c <__do_global_dtors_aux>:
+ 800018c:	b510      	push	{r4, lr}
+ 800018e:	4c05      	ldr	r4, [pc, #20]	@ (80001a4 <__do_global_dtors_aux+0x18>)
+ 8000190:	7823      	ldrb	r3, [r4, #0]
+ 8000192:	b933      	cbnz	r3, 80001a2 <__do_global_dtors_aux+0x16>
+ 8000194:	4b04      	ldr	r3, [pc, #16]	@ (80001a8 <__do_global_dtors_aux+0x1c>)
+ 8000196:	b113      	cbz	r3, 800019e <__do_global_dtors_aux+0x12>
+ 8000198:	4804      	ldr	r0, [pc, #16]	@ (80001ac <__do_global_dtors_aux+0x20>)
+ 800019a:	f3af 8000 	nop.w
+ 800019e:	2301      	movs	r3, #1
+ 80001a0:	7023      	strb	r3, [r4, #0]
+ 80001a2:	bd10      	pop	{r4, pc}
+ 80001a4:	20000004 	.word	0x20000004
+ 80001a8:	00000000 	.word	0x00000000
+ 80001ac:	08000710 	.word	0x08000710
+
+080001b0 <frame_dummy>:
+ 80001b0:	b508      	push	{r3, lr}
+ 80001b2:	4b03      	ldr	r3, [pc, #12]	@ (80001c0 <frame_dummy+0x10>)
+ 80001b4:	b11b      	cbz	r3, 80001be <frame_dummy+0xe>
+ 80001b6:	4903      	ldr	r1, [pc, #12]	@ (80001c4 <frame_dummy+0x14>)
+ 80001b8:	4803      	ldr	r0, [pc, #12]	@ (80001c8 <frame_dummy+0x18>)
+ 80001ba:	f3af 8000 	nop.w
+ 80001be:	bd08      	pop	{r3, pc}
+ 80001c0:	00000000 	.word	0x00000000
+ 80001c4:	20000008 	.word	0x20000008
+ 80001c8:	08000710 	.word	0x08000710
+
+080001cc <ADC1_Wakeup>:
+
+//-------------------------------------------------------------------------------------------
+//  ADC1_Wakeup
+//  Wake up ADC1 from deep-power-down mode and enable the internal voltage regulator.
+//-------------------------------------------------------------------------------------------
+void ADC1_Wakeup (void) {
+ 80001cc:	b480      	push	{r7}
+ 80001ce:	b083      	sub	sp, #12
+ 80001d0:	af00      	add	r7, sp, #0
+
+	int wait_time;
+
+	// 1. Exit deep power down mode
+	ADC1->CR &= ~ADC_CR_DEEPPWD;
+ 80001d2:	4b0e      	ldr	r3, [pc, #56]	@ (800020c <ADC1_Wakeup+0x40>)
+ 80001d4:	689b      	ldr	r3, [r3, #8]
+ 80001d6:	4a0d      	ldr	r2, [pc, #52]	@ (800020c <ADC1_Wakeup+0x40>)
+ 80001d8:	f023 5300 	bic.w	r3, r3, #536870912	@ 0x20000000
+ 80001dc:	6093      	str	r3, [r2, #8]
+
+	// 2. Enable the ADC internal voltage regulator
+	ADC1->CR |= ADC_CR_ADVREGEN;
+ 80001de:	4b0b      	ldr	r3, [pc, #44]	@ (800020c <ADC1_Wakeup+0x40>)
+ 80001e0:	689b      	ldr	r3, [r3, #8]
+ 80001e2:	4a0a      	ldr	r2, [pc, #40]	@ (800020c <ADC1_Wakeup+0x40>)
+ 80001e4:	f043 5380 	orr.w	r3, r3, #268435456	@ 0x10000000
+ 80001e8:	6093      	str	r3, [r2, #8]
+
+	// 3. Wait for ADC voltage regulator start-up time (T_ADCVREG_STUP)
+	//    T_ADCVREG_STUP ≈ 20 µs at 4 MHz
+	wait_time = 20 * (4000000 / 1000000);
+ 80001ea:	2350      	movs	r3, #80	@ 0x50
+ 80001ec:	607b      	str	r3, [r7, #4]
+	while(wait_time != 0) {
+ 80001ee:	e002      	b.n	80001f6 <ADC1_Wakeup+0x2a>
+		wait_time--;
+ 80001f0:	687b      	ldr	r3, [r7, #4]
+ 80001f2:	3b01      	subs	r3, #1
+ 80001f4:	607b      	str	r3, [r7, #4]
+	while(wait_time != 0) {
+ 80001f6:	687b      	ldr	r3, [r7, #4]
+ 80001f8:	2b00      	cmp	r3, #0
+ 80001fa:	d1f9      	bne.n	80001f0 <ADC1_Wakeup+0x24>
+	}
+}
+ 80001fc:	bf00      	nop
+ 80001fe:	bf00      	nop
+ 8000200:	370c      	adds	r7, #12
+ 8000202:	46bd      	mov	sp, r7
+ 8000204:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000208:	4770      	bx	lr
+ 800020a:	bf00      	nop
+ 800020c:	50040000 	.word	0x50040000
+
+08000210 <ADC_Common_Configuration>:
+
+//-------------------------------------------------------------------------------------------
+//  ADC_Common_Configuration
+//  Configure ADC common control register: clock mode, prescaler, and dual mode.
+//-------------------------------------------------------------------------------------------
+void ADC_Common_Configuration() {
+ 8000210:	b480      	push	{r7}
+ 8000212:	af00      	add	r7, sp, #0
+
+	// 1. Select ADC input clock through ADC_CCR, field CKMODE[1:0]
+	//    CKMODE = 01: HCLK/1 (synchronous clock mode)
+	ADC123_COMMON->CCR &= ~ADC_CCR_CKMODE;   // Clear CKMODE bits
+ 8000214:	4b0e      	ldr	r3, [pc, #56]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 8000216:	689b      	ldr	r3, [r3, #8]
+ 8000218:	4a0d      	ldr	r2, [pc, #52]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 800021a:	f423 3340 	bic.w	r3, r3, #196608	@ 0x30000
+ 800021e:	6093      	str	r3, [r2, #8]
+	ADC123_COMMON->CCR |=  ADC_CCR_CKMODE_0; // HCLK/1
+ 8000220:	4b0b      	ldr	r3, [pc, #44]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 8000222:	689b      	ldr	r3, [r3, #8]
+ 8000224:	4a0a      	ldr	r2, [pc, #40]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 8000226:	f443 3380 	orr.w	r3, r3, #65536	@ 0x10000
+ 800022a:	6093      	str	r3, [r2, #8]
+
+	// 2. Independent mode (no dual mode)
+	ADC123_COMMON->CCR &= ~ADC_CCR_DUAL;
+ 800022c:	4b08      	ldr	r3, [pc, #32]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 800022e:	689b      	ldr	r3, [r3, #8]
+ 8000230:	4a07      	ldr	r2, [pc, #28]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 8000232:	f023 031f 	bic.w	r3, r3, #31
+ 8000236:	6093      	str	r3, [r2, #8]
+
+	// 3. No additional prescaler on ADC clock (PRESC = 0000)
+	ADC123_COMMON->CCR &= ~ADC_CCR_PRESC;
+ 8000238:	4b05      	ldr	r3, [pc, #20]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 800023a:	689b      	ldr	r3, [r3, #8]
+ 800023c:	4a04      	ldr	r2, [pc, #16]	@ (8000250 <ADC_Common_Configuration+0x40>)
+ 800023e:	f423 1370 	bic.w	r3, r3, #3932160	@ 0x3c0000
+ 8000242:	6093      	str	r3, [r2, #8]
+}
+ 8000244:	bf00      	nop
+ 8000246:	46bd      	mov	sp, r7
+ 8000248:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800024c:	4770      	bx	lr
+ 800024e:	bf00      	nop
+ 8000250:	50040300 	.word	0x50040300
+
+08000254 <ADC_Pin_Init>:
+
+//-------------------------------------------------------------------------------------------
+//  ADC_Pin_Init
+//  Initialize PC0 as analog input for ADC1 channel 1 (ADC123_IN1).
+//-------------------------------------------------------------------------------------------
+void ADC_Pin_Init(void){
+ 8000254:	b480      	push	{r7}
+ 8000256:	af00      	add	r7, sp, #0
+
+	// 1. Enable the clock of GPIO Port C
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+ 8000258:	4b0b      	ldr	r3, [pc, #44]	@ (8000288 <ADC_Pin_Init+0x34>)
+ 800025a:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
+ 800025c:	4a0a      	ldr	r2, [pc, #40]	@ (8000288 <ADC_Pin_Init+0x34>)
+ 800025e:	f043 0304 	orr.w	r3, r3, #4
+ 8000262:	64d3      	str	r3, [r2, #76]	@ 0x4c
+
+	// 2. Configure PC0 in analog mode: MODER0[1:0] = 11
+	GPIOC->MODER |= 0b11UL << (2 * 0);
+ 8000264:	4b09      	ldr	r3, [pc, #36]	@ (800028c <ADC_Pin_Init+0x38>)
+ 8000266:	681b      	ldr	r3, [r3, #0]
+ 8000268:	4a08      	ldr	r2, [pc, #32]	@ (800028c <ADC_Pin_Init+0x38>)
+ 800026a:	f043 0303 	orr.w	r3, r3, #3
+ 800026e:	6013      	str	r3, [r2, #0]
+
+	// 3. Connect analog switch to the ADC input pin by configuring GPIOC_ASCR
+	GPIOC->ASCR |= 1UL << 0;
+ 8000270:	4b06      	ldr	r3, [pc, #24]	@ (800028c <ADC_Pin_Init+0x38>)
+ 8000272:	6adb      	ldr	r3, [r3, #44]	@ 0x2c
+ 8000274:	4a05      	ldr	r2, [pc, #20]	@ (800028c <ADC_Pin_Init+0x38>)
+ 8000276:	f043 0301 	orr.w	r3, r3, #1
+ 800027a:	62d3      	str	r3, [r2, #44]	@ 0x2c
+}
+ 800027c:	bf00      	nop
+ 800027e:	46bd      	mov	sp, r7
+ 8000280:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000284:	4770      	bx	lr
+ 8000286:	bf00      	nop
+ 8000288:	40021000 	.word	0x40021000
+ 800028c:	48000800 	.word	0x48000800
+
+08000290 <ADC_Init>:
+//  Initialize ADC1 in single-conversion, polling mode.
+//  - 10-bit resolution, right-aligned data
+//  - Channel 1 on PC0
+//  - Software-triggered conversions (no continuous mode, no interrupts)
+//--------------------------------------------------------------------------------------------------
+void ADC_Init(void){
+ 8000290:	b580      	push	{r7, lr}
+ 8000292:	af00      	add	r7, sp, #0
+
+	// 1. Disable ADC1 before further configurations
+	ADC1->CR &= ~ADC_CR_ADEN;
+ 8000294:	4b36      	ldr	r3, [pc, #216]	@ (8000370 <ADC_Init+0xe0>)
+ 8000296:	689b      	ldr	r3, [r3, #8]
+ 8000298:	4a35      	ldr	r2, [pc, #212]	@ (8000370 <ADC_Init+0xe0>)
+ 800029a:	f023 0301 	bic.w	r3, r3, #1
+ 800029e:	6093      	str	r3, [r2, #8]
+
+	// 2. Enable the clock of ADC1
+	RCC->AHB2ENR  |= RCC_AHB2ENR_ADCEN;
+ 80002a0:	4b34      	ldr	r3, [pc, #208]	@ (8000374 <ADC_Init+0xe4>)
+ 80002a2:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
+ 80002a4:	4a33      	ldr	r2, [pc, #204]	@ (8000374 <ADC_Init+0xe4>)
+ 80002a6:	f443 5300 	orr.w	r3, r3, #8192	@ 0x2000
+ 80002aa:	64d3      	str	r3, [r2, #76]	@ 0x4c
+
+	// 3. Configure ADC common parameters (clock, dual mode)
+	ADC_Common_Configuration();
+ 80002ac:	f7ff ffb0 	bl	8000210 <ADC_Common_Configuration>
+
+	// 4. Wake up ADC1 from deep power down mode
+	ADC1_Wakeup();
+ 80002b0:	f7ff ff8c 	bl	80001cc <ADC1_Wakeup>
+
+	// 5. Configure single-ended mode for channel 1 (PC0)
+	ADC1->DIFSEL &= ~ADC_DIFSEL_DIFSEL_1; 	// 0: single-ended on channel 1
+ 80002b4:	4b2e      	ldr	r3, [pc, #184]	@ (8000370 <ADC_Init+0xe0>)
+ 80002b6:	f8d3 30b0 	ldr.w	r3, [r3, #176]	@ 0xb0
+ 80002ba:	4a2d      	ldr	r2, [pc, #180]	@ (8000370 <ADC_Init+0xe0>)
+ 80002bc:	f023 0302 	bic.w	r3, r3, #2
+ 80002c0:	f8c2 30b0 	str.w	r3, [r2, #176]	@ 0xb0
+
+	// 6. Start ADC1 calibration to remove offset error
+	ADC1->CR |=  ADC_CR_ADCAL;                     // Start calibration
+ 80002c4:	4b2a      	ldr	r3, [pc, #168]	@ (8000370 <ADC_Init+0xe0>)
+ 80002c6:	689b      	ldr	r3, [r3, #8]
+ 80002c8:	4a29      	ldr	r2, [pc, #164]	@ (8000370 <ADC_Init+0xe0>)
+ 80002ca:	f043 4300 	orr.w	r3, r3, #2147483648	@ 0x80000000
+ 80002ce:	6093      	str	r3, [r2, #8]
+	while((ADC1->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL); // Wait until calibration is done
+ 80002d0:	bf00      	nop
+ 80002d2:	4b27      	ldr	r3, [pc, #156]	@ (8000370 <ADC_Init+0xe0>)
+ 80002d4:	689b      	ldr	r3, [r3, #8]
+ 80002d6:	f003 4300 	and.w	r3, r3, #2147483648	@ 0x80000000
+ 80002da:	f1b3 4f00 	cmp.w	r3, #2147483648	@ 0x80000000
+ 80002de:	d0f8      	beq.n	80002d2 <ADC_Init+0x42>
+
+	// 7. Enable ADC1 module
+	ADC1->CR |= ADC_CR_ADEN;
+ 80002e0:	4b23      	ldr	r3, [pc, #140]	@ (8000370 <ADC_Init+0xe0>)
+ 80002e2:	689b      	ldr	r3, [r3, #8]
+ 80002e4:	4a22      	ldr	r2, [pc, #136]	@ (8000370 <ADC_Init+0xe0>)
+ 80002e6:	f043 0301 	orr.w	r3, r3, #1
+ 80002ea:	6093      	str	r3, [r2, #8]
+
+	// 8. Initialize ADC input pin PC0 as analog
+	ADC_Pin_Init();
+ 80002ec:	f7ff ffb2 	bl	8000254 <ADC_Pin_Init>
+
+	// 9. Configure ADC data resolution and alignment
+	//    RES[1:0] = 01 → 10-bit; ALIGN = 0 → right alignment
+	ADC1->CFGR &= ~ADC_CFGR_RES;        // Clear resolution bits
+ 80002f0:	4b1f      	ldr	r3, [pc, #124]	@ (8000370 <ADC_Init+0xe0>)
+ 80002f2:	68db      	ldr	r3, [r3, #12]
+ 80002f4:	4a1e      	ldr	r2, [pc, #120]	@ (8000370 <ADC_Init+0xe0>)
+ 80002f6:	f023 0318 	bic.w	r3, r3, #24
+ 80002fa:	60d3      	str	r3, [r2, #12]
+	ADC1->CFGR |=  ADC_CFGR_RES_0;      // 10-bit resolution
+ 80002fc:	4b1c      	ldr	r3, [pc, #112]	@ (8000370 <ADC_Init+0xe0>)
+ 80002fe:	68db      	ldr	r3, [r3, #12]
+ 8000300:	4a1b      	ldr	r2, [pc, #108]	@ (8000370 <ADC_Init+0xe0>)
+ 8000302:	f043 0308 	orr.w	r3, r3, #8
+ 8000306:	60d3      	str	r3, [r2, #12]
+	ADC1->CFGR &= ~ADC_CFGR_ALIGN;      // Right alignment
+ 8000308:	4b19      	ldr	r3, [pc, #100]	@ (8000370 <ADC_Init+0xe0>)
+ 800030a:	68db      	ldr	r3, [r3, #12]
+ 800030c:	4a18      	ldr	r2, [pc, #96]	@ (8000370 <ADC_Init+0xe0>)
+ 800030e:	f023 0320 	bic.w	r3, r3, #32
+ 8000312:	60d3      	str	r3, [r2, #12]
+
+	// 10. Set up the ADC regular sequence length and channel
+	ADC1->SQR1 &= ~ADC_SQR1_L;          // Sequence length = 1 conversion
+ 8000314:	4b16      	ldr	r3, [pc, #88]	@ (8000370 <ADC_Init+0xe0>)
+ 8000316:	6b1b      	ldr	r3, [r3, #48]	@ 0x30
+ 8000318:	4a15      	ldr	r2, [pc, #84]	@ (8000370 <ADC_Init+0xe0>)
+ 800031a:	f023 030f 	bic.w	r3, r3, #15
+ 800031e:	6313      	str	r3, [r2, #48]	@ 0x30
+	ADC1->SQR1 &= ~ADC_SQR1_SQ1;        // Clear first conversion channel
+ 8000320:	4b13      	ldr	r3, [pc, #76]	@ (8000370 <ADC_Init+0xe0>)
+ 8000322:	6b1b      	ldr	r3, [r3, #48]	@ 0x30
+ 8000324:	4a12      	ldr	r2, [pc, #72]	@ (8000370 <ADC_Init+0xe0>)
+ 8000326:	f423 63f8 	bic.w	r3, r3, #1984	@ 0x7c0
+ 800032a:	6313      	str	r3, [r2, #48]	@ 0x30
+	ADC1->SQR1 |=  (1U << 6);           // Channel 1 as the 1st conversion
+ 800032c:	4b10      	ldr	r3, [pc, #64]	@ (8000370 <ADC_Init+0xe0>)
+ 800032e:	6b1b      	ldr	r3, [r3, #48]	@ 0x30
+ 8000330:	4a0f      	ldr	r2, [pc, #60]	@ (8000370 <ADC_Init+0xe0>)
+ 8000332:	f043 0340 	orr.w	r3, r3, #64	@ 0x40
+ 8000336:	6313      	str	r3, [r2, #48]	@ 0x30
+
+	// 11. Select single-conversion mode (CONT = 0)
+	ADC1->CFGR &= ~ADC_CFGR_CONT;
+ 8000338:	4b0d      	ldr	r3, [pc, #52]	@ (8000370 <ADC_Init+0xe0>)
+ 800033a:	68db      	ldr	r3, [r3, #12]
+ 800033c:	4a0c      	ldr	r2, [pc, #48]	@ (8000370 <ADC_Init+0xe0>)
+ 800033e:	f423 5300 	bic.w	r3, r3, #8192	@ 0x2000
+ 8000342:	60d3      	str	r3, [r2, #12]
+
+	// 12. Disable hardware triggers; use software trigger only (EXTEN = 00)
+	ADC1->CFGR &= ~ADC_CFGR_EXTEN;
+ 8000344:	4b0a      	ldr	r3, [pc, #40]	@ (8000370 <ADC_Init+0xe0>)
+ 8000346:	68db      	ldr	r3, [r3, #12]
+ 8000348:	4a09      	ldr	r2, [pc, #36]	@ (8000370 <ADC_Init+0xe0>)
+ 800034a:	f423 6340 	bic.w	r3, r3, #3072	@ 0xc00
+ 800034e:	60d3      	str	r3, [r2, #12]
+
+	// 13. Disable ADC interrupts (use polling for EOC)
+	ADC1->IER &= ~ADC_IER_EOC;          // No EOC interrupt
+ 8000350:	4b07      	ldr	r3, [pc, #28]	@ (8000370 <ADC_Init+0xe0>)
+ 8000352:	685b      	ldr	r3, [r3, #4]
+ 8000354:	4a06      	ldr	r2, [pc, #24]	@ (8000370 <ADC_Init+0xe0>)
+ 8000356:	f023 0304 	bic.w	r3, r3, #4
+ 800035a:	6053      	str	r3, [r2, #4]
+
+	// 14. Wait until ADC1 is ready to accept conversions (ADRDY = 1)
+	while((ADC1->ISR & ADC_ISR_ADRDY) == 0);
+ 800035c:	bf00      	nop
+ 800035e:	4b04      	ldr	r3, [pc, #16]	@ (8000370 <ADC_Init+0xe0>)
+ 8000360:	681b      	ldr	r3, [r3, #0]
+ 8000362:	f003 0301 	and.w	r3, r3, #1
+ 8000366:	2b00      	cmp	r3, #0
+ 8000368:	d0f9      	beq.n	800035e <ADC_Init+0xce>
+}
+ 800036a:	bf00      	nop
+ 800036c:	bf00      	nop
+ 800036e:	bd80      	pop	{r7, pc}
+ 8000370:	50040000 	.word	0x50040000
+ 8000374:	40021000 	.word	0x40021000
+
+08000378 <ADC_Read10bit>:
+//  Perform a single ADC conversion on Channel 1 (PC0) and return a 10-bit result.
+//
+//  Returns:
+//    0–1023: 10-bit conversion result corresponding to 0–3.3 V input.
+//-------------------------------------------------------------------------------------------
+uint16_t ADC_Read10bit(void) {
+ 8000378:	b480      	push	{r7}
+ 800037a:	af00      	add	r7, sp, #0
+
+	// 1. Start a single ADC conversion by setting ADSTART
+	ADC1->CR |= ADC_CR_ADSTART;
+ 800037c:	4b0f      	ldr	r3, [pc, #60]	@ (80003bc <ADC_Read10bit+0x44>)
+ 800037e:	689b      	ldr	r3, [r3, #8]
+ 8000380:	4a0e      	ldr	r2, [pc, #56]	@ (80003bc <ADC_Read10bit+0x44>)
+ 8000382:	f043 0304 	orr.w	r3, r3, #4
+ 8000386:	6093      	str	r3, [r2, #8]
+
+	// 2. Wait until End of Conversion (EOC) flag is set
+	while ((ADC1->ISR & ADC_ISR_EOC) == 0);
+ 8000388:	bf00      	nop
+ 800038a:	4b0c      	ldr	r3, [pc, #48]	@ (80003bc <ADC_Read10bit+0x44>)
+ 800038c:	681b      	ldr	r3, [r3, #0]
+ 800038e:	f003 0304 	and.w	r3, r3, #4
+ 8000392:	2b00      	cmp	r3, #0
+ 8000394:	d0f9      	beq.n	800038a <ADC_Read10bit+0x12>
+
+	// 3. Clear EOC flag by writing 1 to it
+	ADC1->ISR |= ADC_ISR_EOC;
+ 8000396:	4b09      	ldr	r3, [pc, #36]	@ (80003bc <ADC_Read10bit+0x44>)
+ 8000398:	681b      	ldr	r3, [r3, #0]
+ 800039a:	4a08      	ldr	r2, [pc, #32]	@ (80003bc <ADC_Read10bit+0x44>)
+ 800039c:	f043 0304 	orr.w	r3, r3, #4
+ 80003a0:	6013      	str	r3, [r2, #0]
+
+	// 4. Read the conversion result from ADC1_DR
+	adc_result = ADC1->DR;   // Store in global variable for monitoring/debug
+ 80003a2:	4b06      	ldr	r3, [pc, #24]	@ (80003bc <ADC_Read10bit+0x44>)
+ 80003a4:	6c1b      	ldr	r3, [r3, #64]	@ 0x40
+ 80003a6:	4a06      	ldr	r2, [pc, #24]	@ (80003c0 <ADC_Read10bit+0x48>)
+ 80003a8:	6013      	str	r3, [r2, #0]
+
+	// 5. Return the 10-bit result
+	return (uint16_t)adc_result;  // 0..1023
+ 80003aa:	4b05      	ldr	r3, [pc, #20]	@ (80003c0 <ADC_Read10bit+0x48>)
+ 80003ac:	681b      	ldr	r3, [r3, #0]
+ 80003ae:	b29b      	uxth	r3, r3
+}
+ 80003b0:	4618      	mov	r0, r3
+ 80003b2:	46bd      	mov	sp, r7
+ 80003b4:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80003b8:	4770      	bx	lr
+ 80003ba:	bf00      	nop
+ 80003bc:	50040000 	.word	0x50040000
+ 80003c0:	20000020 	.word	0x20000020
+
+080003c4 <PWM_Pin_Init>:
+//-------------------------------------------------------------------------------------------
+//  PWM_Pin_Init
+//  Initialize PA5 as alternate function TIM2_CH1 to output a PWM signal.
+//  This pin is connected to the LD2 LED on the Nucleo-L476 board.
+//-------------------------------------------------------------------------------------------
+void PWM_Pin_Init(void) {
+ 80003c4:	b480      	push	{r7}
+ 80003c6:	af00      	add	r7, sp, #0
+
+    // 1. Enable the clock of GPIO Port A (for PA5)
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+ 80003c8:	4b15      	ldr	r3, [pc, #84]	@ (8000420 <PWM_Pin_Init+0x5c>)
+ 80003ca:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
+ 80003cc:	4a14      	ldr	r2, [pc, #80]	@ (8000420 <PWM_Pin_Init+0x5c>)
+ 80003ce:	f043 0301 	orr.w	r3, r3, #1
+ 80003d2:	64d3      	str	r3, [r2, #76]	@ 0x4c
+
+    // 2. Configure PA5 as Alternate Function mode
+    //    MODER5[1:0] = 10: Alternate function
+    GPIOA->MODER &= ~(0b11UL << (2 * 5));     // Clear mode bits for PA5
+ 80003d4:	f04f 4390 	mov.w	r3, #1207959552	@ 0x48000000
+ 80003d8:	681b      	ldr	r3, [r3, #0]
+ 80003da:	f04f 4290 	mov.w	r2, #1207959552	@ 0x48000000
+ 80003de:	f423 6340 	bic.w	r3, r3, #3072	@ 0xc00
+ 80003e2:	6013      	str	r3, [r2, #0]
+    GPIOA->MODER |=  (0b10UL << (2 * 5));     // Set mode to Alternate Function
+ 80003e4:	f04f 4390 	mov.w	r3, #1207959552	@ 0x48000000
+ 80003e8:	681b      	ldr	r3, [r3, #0]
+ 80003ea:	f04f 4290 	mov.w	r2, #1207959552	@ 0x48000000
+ 80003ee:	f443 6300 	orr.w	r3, r3, #2048	@ 0x800
+ 80003f2:	6013      	str	r3, [r2, #0]
+
+    // 3. Select Alternate Function AF1 (TIM2_CH1) for PA5
+    //    AFRL5[3:0] = 0001: AF1
+    GPIOA->AFR[0] &= ~(0xFUL << (4 * 5));     // Clear AF bits for PA5
+ 80003f4:	f04f 4390 	mov.w	r3, #1207959552	@ 0x48000000
+ 80003f8:	6a1b      	ldr	r3, [r3, #32]
+ 80003fa:	f04f 4290 	mov.w	r2, #1207959552	@ 0x48000000
+ 80003fe:	f423 0370 	bic.w	r3, r3, #15728640	@ 0xf00000
+ 8000402:	6213      	str	r3, [r2, #32]
+    GPIOA->AFR[0] |=  (0x1UL << (4 * 5));     // Set AF1 for PA5
+ 8000404:	f04f 4390 	mov.w	r3, #1207959552	@ 0x48000000
+ 8000408:	6a1b      	ldr	r3, [r3, #32]
+ 800040a:	f04f 4290 	mov.w	r2, #1207959552	@ 0x48000000
+ 800040e:	f443 1380 	orr.w	r3, r3, #1048576	@ 0x100000
+ 8000412:	6213      	str	r3, [r2, #32]
+
+    // 4. Output type, speed, and pull-up/down left at default:
+    //    - Push-pull
+    //    - Low speed
+    //    - No pull-up, no pull-down
+}
+ 8000414:	bf00      	nop
+ 8000416:	46bd      	mov	sp, r7
+ 8000418:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800041c:	4770      	bx	lr
+ 800041e:	bf00      	nop
+ 8000420:	40021000 	.word	0x40021000
+
+08000424 <PWM_Timer_Init>:
+//-------------------------------------------------------------------------------------------
+//  PWM_Timer_Init
+//  Configure TIM2 Channel 1 to generate a PWM signal on PA5.
+//  The timer period is set to 1023 so that a 10-bit value (0..1023) maps directly to duty.
+//-------------------------------------------------------------------------------------------
+void PWM_Timer_Init(void) {
+ 8000424:	b480      	push	{r7}
+ 8000426:	af00      	add	r7, sp, #0
+
+    // 1. Enable clock for TIM2 on APB1 bus
+    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+ 8000428:	4b28      	ldr	r3, [pc, #160]	@ (80004cc <PWM_Timer_Init+0xa8>)
+ 800042a:	6d9b      	ldr	r3, [r3, #88]	@ 0x58
+ 800042c:	4a27      	ldr	r2, [pc, #156]	@ (80004cc <PWM_Timer_Init+0xa8>)
+ 800042e:	f043 0301 	orr.w	r3, r3, #1
+ 8000432:	6593      	str	r3, [r2, #88]	@ 0x58
+    //    choose:
+    //      - Prescaler (PSC) = 39  → timer clock = 4 MHz / (39 + 1) = 100 kHz
+    //      - Auto-reload (ARR) = 1023 → PWM frequency ≈ 100 kHz / 1024 ≈ 97.6 Hz
+    //
+    //    This gives a ~100 Hz PWM, smooth enough for LED dimming.
+    TIM2->PSC = 39;          // Prescaler value
+ 8000434:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 8000438:	2227      	movs	r2, #39	@ 0x27
+ 800043a:	629a      	str	r2, [r3, #40]	@ 0x28
+    TIM2->ARR = 1023;        // Auto-reload value for 10-bit resolution
+ 800043c:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 8000440:	f240 32ff 	movw	r2, #1023	@ 0x3ff
+ 8000444:	62da      	str	r2, [r3, #44]	@ 0x2c
+    //    PWM mode 1 on OC1:
+    //      - OC1M[2:0] = 110: PWM mode 1
+    //      - OC1PE = 1: enable preload for CCR1
+    //
+    //    CCMR1 register, OC1M bits [6:4], OC1PE bit [3]
+    TIM2->CCMR1 &= ~(TIM_CCMR1_OC1M);               // Clear OC1M bits
+ 8000446:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 800044a:	699b      	ldr	r3, [r3, #24]
+ 800044c:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 8000450:	f423 3380 	bic.w	r3, r3, #65536	@ 0x10000
+ 8000454:	f023 0370 	bic.w	r3, r3, #112	@ 0x70
+ 8000458:	6193      	str	r3, [r2, #24]
+    TIM2->CCMR1 |=  (6U << TIM_CCMR1_OC1M_Pos);     // OC1M = 110: PWM mode 1
+ 800045a:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 800045e:	699b      	ldr	r3, [r3, #24]
+ 8000460:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 8000464:	f043 0360 	orr.w	r3, r3, #96	@ 0x60
+ 8000468:	6193      	str	r3, [r2, #24]
+    TIM2->CCMR1 |=  TIM_CCMR1_OC1PE;                // Enable preload for CCR1
+ 800046a:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 800046e:	699b      	ldr	r3, [r3, #24]
+ 8000470:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 8000474:	f043 0308 	orr.w	r3, r3, #8
+ 8000478:	6193      	str	r3, [r2, #24]
+
+    // 4. Enable output for Channel 1
+    //
+    //    CCER register:
+    //      - CC1E = 1: enable compare output on CH1
+    TIM2->CCER |= TIM_CCER_CC1E;
+ 800047a:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 800047e:	6a1b      	ldr	r3, [r3, #32]
+ 8000480:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 8000484:	f043 0301 	orr.w	r3, r3, #1
+ 8000488:	6213      	str	r3, [r2, #32]
+
+    // 5. Initialize duty cycle to 0% (CCR1 = 0)
+    TIM2->CCR1 = 0;
+ 800048a:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 800048e:	2200      	movs	r2, #0
+ 8000490:	635a      	str	r2, [r3, #52]	@ 0x34
+
+    // 6. Enable auto-reload preload
+    TIM2->CR1 |= TIM_CR1_ARPE;
+ 8000492:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 8000496:	681b      	ldr	r3, [r3, #0]
+ 8000498:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 800049c:	f043 0380 	orr.w	r3, r3, #128	@ 0x80
+ 80004a0:	6013      	str	r3, [r2, #0]
+
+    // 7. Generate an update event to load the prescaler and ARR values
+    TIM2->EGR |= TIM_EGR_UG;
+ 80004a2:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 80004a6:	695b      	ldr	r3, [r3, #20]
+ 80004a8:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 80004ac:	f043 0301 	orr.w	r3, r3, #1
+ 80004b0:	6153      	str	r3, [r2, #20]
+
+    // 8. Enable the counter
+    TIM2->CR1 |= TIM_CR1_CEN;
+ 80004b2:	f04f 4380 	mov.w	r3, #1073741824	@ 0x40000000
+ 80004b6:	681b      	ldr	r3, [r3, #0]
+ 80004b8:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 80004bc:	f043 0301 	orr.w	r3, r3, #1
+ 80004c0:	6013      	str	r3, [r2, #0]
+}
+ 80004c2:	bf00      	nop
+ 80004c4:	46bd      	mov	sp, r7
+ 80004c6:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 80004ca:	4770      	bx	lr
+ 80004cc:	40021000 	.word	0x40021000
+
+080004d0 <PWM_Init>:
+
+//-------------------------------------------------------------------------------------------
+//  PWM_Init
+//  High-level function that initializes both the PWM pin and the timer.
+//-------------------------------------------------------------------------------------------
+void PWM_Init(void) {
+ 80004d0:	b580      	push	{r7, lr}
+ 80004d2:	af00      	add	r7, sp, #0
+
+    // 1. Initialize PA5 pin as TIM2_CH1 in alternate function mode
+    PWM_Pin_Init();
+ 80004d4:	f7ff ff76 	bl	80003c4 <PWM_Pin_Init>
+
+    // 2. Initialize TIM2 Channel 1 for PWM generation
+    PWM_Timer_Init();
+ 80004d8:	f7ff ffa4 	bl	8000424 <PWM_Timer_Init>
+}
+ 80004dc:	bf00      	nop
+ 80004de:	bd80      	pop	{r7, pc}
+
+080004e0 <PWM_SetDuty>:
+//  Input:
+//    duty: 10-bit value, 0 to 1023
+//          - 0    → 0% duty cycle (always off)
+//          - 1023 → ≈100% duty cycle (always on)
+//-------------------------------------------------------------------------------------------
+void PWM_SetDuty(uint16_t duty) {
+ 80004e0:	b480      	push	{r7}
+ 80004e2:	b083      	sub	sp, #12
+ 80004e4:	af00      	add	r7, sp, #0
+ 80004e6:	4603      	mov	r3, r0
+ 80004e8:	80fb      	strh	r3, [r7, #6]
+
+    // 1. Limit the duty value to the 10-bit range [0..1023]
+    if (duty > 1023) {
+ 80004ea:	88fb      	ldrh	r3, [r7, #6]
+ 80004ec:	f5b3 6f80 	cmp.w	r3, #1024	@ 0x400
+ 80004f0:	d302      	bcc.n	80004f8 <PWM_SetDuty+0x18>
+        duty = 1023;
+ 80004f2:	f240 33ff 	movw	r3, #1023	@ 0x3ff
+ 80004f6:	80fb      	strh	r3, [r7, #6]
+    }
+
+    // 2. Store duty in global variable for monitoring/debug
+    pwm_duty = duty;
+ 80004f8:	4a06      	ldr	r2, [pc, #24]	@ (8000514 <PWM_SetDuty+0x34>)
+ 80004fa:	88fb      	ldrh	r3, [r7, #6]
+ 80004fc:	8013      	strh	r3, [r2, #0]
+
+    // 3. Write duty value to CCR1.
+    //    This value is compared against the timer counter to generate PWM.
+    TIM2->CCR1 = duty;
+ 80004fe:	f04f 4280 	mov.w	r2, #1073741824	@ 0x40000000
+ 8000502:	88fb      	ldrh	r3, [r7, #6]
+ 8000504:	6353      	str	r3, [r2, #52]	@ 0x34
+}
+ 8000506:	bf00      	nop
+ 8000508:	370c      	adds	r7, #12
+ 800050a:	46bd      	mov	sp, r7
+ 800050c:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000510:	4770      	bx	lr
+ 8000512:	bf00      	nop
+ 8000514:	20000024 	.word	0x20000024
+
+08000518 <SysTick_Handler>:
+}
+
+//-------------------------------------------------------------------------------------------
+// SysTick Exception Handler
+//-------------------------------------------------------------------------------------------
+void SysTick_Handler(void){
+ 8000518:	b480      	push	{r7}
+ 800051a:	af00      	add	r7, sp, #0
+	// Toggle PA5 each time SysTick interrupt fires
+	GPIOA->ODR ^= (1 << 5);
+ 800051c:	f04f 4390 	mov.w	r3, #1207959552	@ 0x48000000
+ 8000520:	695b      	ldr	r3, [r3, #20]
+ 8000522:	f04f 4290 	mov.w	r2, #1207959552	@ 0x48000000
+ 8000526:	f083 0320 	eor.w	r3, r3, #32
+ 800052a:	6153      	str	r3, [r2, #20]
+}
+ 800052c:	bf00      	nop
+ 800052e:	46bd      	mov	sp, r7
+ 8000530:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 8000534:	4770      	bx	lr
+	...
+
+08000538 <__NVIC_EnableIRQ>:
+  \details Enables a device specific interrupt in the NVIC interrupt controller.
+  \param [in]      IRQn  Device specific interrupt number.
+  \note    IRQn must not be negative.
+ */
+__STATIC_INLINE void __NVIC_EnableIRQ(IRQn_Type IRQn)
+{
+ 8000538:	b480      	push	{r7}
+ 800053a:	b083      	sub	sp, #12
+ 800053c:	af00      	add	r7, sp, #0
+ 800053e:	4603      	mov	r3, r0
+ 8000540:	71fb      	strb	r3, [r7, #7]
+  if ((int32_t)(IRQn) >= 0)
+ 8000542:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 8000546:	2b00      	cmp	r3, #0
+ 8000548:	db0b      	blt.n	8000562 <__NVIC_EnableIRQ+0x2a>
+  {
+    __COMPILER_BARRIER();
+    NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+ 800054a:	79fb      	ldrb	r3, [r7, #7]
+ 800054c:	f003 021f 	and.w	r2, r3, #31
+ 8000550:	4907      	ldr	r1, [pc, #28]	@ (8000570 <__NVIC_EnableIRQ+0x38>)
+ 8000552:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 8000556:	095b      	lsrs	r3, r3, #5
+ 8000558:	2001      	movs	r0, #1
+ 800055a:	fa00 f202 	lsl.w	r2, r0, r2
+ 800055e:	f841 2023 	str.w	r2, [r1, r3, lsl #2]
+    __COMPILER_BARRIER();
+  }
+}
+ 8000562:	bf00      	nop
+ 8000564:	370c      	adds	r7, #12
+ 8000566:	46bd      	mov	sp, r7
+ 8000568:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800056c:	4770      	bx	lr
+ 800056e:	bf00      	nop
+ 8000570:	e000e100 	.word	0xe000e100
+
+08000574 <button_init>:
+
+// PC13  <--> Blue User Button
+#define BUTTON_PIN   13
+
+
+void button_init() {
+ 8000574:	b580      	push	{r7, lr}
+ 8000576:	af00      	add	r7, sp, #0
+  // 1. Enable the clock to GPIO Port C
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+ 8000578:	4b1c      	ldr	r3, [pc, #112]	@ (80005ec <button_init+0x78>)
+ 800057a:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
+ 800057c:	4a1b      	ldr	r2, [pc, #108]	@ (80005ec <button_init+0x78>)
+ 800057e:	f043 0304 	orr.w	r3, r3, #4
+ 8000582:	64d3      	str	r3, [r2, #76]	@ 0x4c
+
+  // 2. Configure GPIO Mode to Input
+  GPIOC->MODER &= ~(3UL << (2 * BUTTON_PIN));    // Input(00)
+ 8000584:	4b1a      	ldr	r3, [pc, #104]	@ (80005f0 <button_init+0x7c>)
+ 8000586:	681b      	ldr	r3, [r3, #0]
+ 8000588:	4a19      	ldr	r2, [pc, #100]	@ (80005f0 <button_init+0x7c>)
+ 800058a:	f023 6340 	bic.w	r3, r3, #201326592	@ 0xc000000
+ 800058e:	6013      	str	r3, [r2, #0]
+
+  // 3. Configure GPIO Pull-Up/Pull-Down
+  GPIOC->PUPDR &= ~(3UL << (2 * BUTTON_PIN)); // No Pull-up or Pull-down
+ 8000590:	4b17      	ldr	r3, [pc, #92]	@ (80005f0 <button_init+0x7c>)
+ 8000592:	68db      	ldr	r3, [r3, #12]
+ 8000594:	4a16      	ldr	r2, [pc, #88]	@ (80005f0 <button_init+0x7c>)
+ 8000596:	f023 6340 	bic.w	r3, r3, #201326592	@ 0xc000000
+ 800059a:	60d3      	str	r3, [r2, #12]
+
+  // 4. Configure EXTI line 13 to be triggered by PC13
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;           // Enable SYSCFG clock
+ 800059c:	4b13      	ldr	r3, [pc, #76]	@ (80005ec <button_init+0x78>)
+ 800059e:	6e1b      	ldr	r3, [r3, #96]	@ 0x60
+ 80005a0:	4a12      	ldr	r2, [pc, #72]	@ (80005ec <button_init+0x78>)
+ 80005a2:	f043 0301 	orr.w	r3, r3, #1
+ 80005a6:	6613      	str	r3, [r2, #96]	@ 0x60
+  SYSCFG->EXTICR[3] &= ~(SYSCFG_EXTICR4_EXTI13);  // Clear existing setting
+ 80005a8:	4b12      	ldr	r3, [pc, #72]	@ (80005f4 <button_init+0x80>)
+ 80005aa:	695b      	ldr	r3, [r3, #20]
+ 80005ac:	4a11      	ldr	r2, [pc, #68]	@ (80005f4 <button_init+0x80>)
+ 80005ae:	f023 0370 	bic.w	r3, r3, #112	@ 0x70
+ 80005b2:	6153      	str	r3, [r2, #20]
+  SYSCFG->EXTICR[3] |=  (SYSCFG_EXTICR4_EXTI13_PC); // Set EXTI13 to PC13
+ 80005b4:	4b0f      	ldr	r3, [pc, #60]	@ (80005f4 <button_init+0x80>)
+ 80005b6:	695b      	ldr	r3, [r3, #20]
+ 80005b8:	4a0e      	ldr	r2, [pc, #56]	@ (80005f4 <button_init+0x80>)
+ 80005ba:	f043 0320 	orr.w	r3, r3, #32
+ 80005be:	6153      	str	r3, [r2, #20]
+
+  // 5. Configure EXTI Trigger for falling edge (button press pulls PC13 low)
+  EXTI->IMR1  |=  (EXTI_IMR1_IM13);    // Unmask EXTI13 line
+ 80005c0:	4b0d      	ldr	r3, [pc, #52]	@ (80005f8 <button_init+0x84>)
+ 80005c2:	681b      	ldr	r3, [r3, #0]
+ 80005c4:	4a0c      	ldr	r2, [pc, #48]	@ (80005f8 <button_init+0x84>)
+ 80005c6:	f443 5300 	orr.w	r3, r3, #8192	@ 0x2000
+ 80005ca:	6013      	str	r3, [r2, #0]
+  EXTI->FTSR1 |=  (EXTI_FTSR1_FT13);   // Enable falling-edge trigger
+ 80005cc:	4b0a      	ldr	r3, [pc, #40]	@ (80005f8 <button_init+0x84>)
+ 80005ce:	68db      	ldr	r3, [r3, #12]
+ 80005d0:	4a09      	ldr	r2, [pc, #36]	@ (80005f8 <button_init+0x84>)
+ 80005d2:	f443 5300 	orr.w	r3, r3, #8192	@ 0x2000
+ 80005d6:	60d3      	str	r3, [r2, #12]
+  EXTI->PR1    =  (EXTI_PR1_PIF13);    // Clear any pending flag
+ 80005d8:	4b07      	ldr	r3, [pc, #28]	@ (80005f8 <button_init+0x84>)
+ 80005da:	f44f 5200 	mov.w	r2, #8192	@ 0x2000
+ 80005de:	615a      	str	r2, [r3, #20]
+
+  // 6. Enable EXTI15_10 interrupt in NVIC
+  NVIC_EnableIRQ(EXTI15_10_IRQn);
+ 80005e0:	2028      	movs	r0, #40	@ 0x28
+ 80005e2:	f7ff ffa9 	bl	8000538 <__NVIC_EnableIRQ>
+}
+ 80005e6:	bf00      	nop
+ 80005e8:	bd80      	pop	{r7, pc}
+ 80005ea:	bf00      	nop
+ 80005ec:	40021000 	.word	0x40021000
+ 80005f0:	48000800 	.word	0x48000800
+ 80005f4:	40010000 	.word	0x40010000
+ 80005f8:	40010400 	.word	0x40010400
+
+080005fc <EXTI15_10_IRQHandler>:
+
+void EXTI15_10_IRQHandler(void) {
+ 80005fc:	b480      	push	{r7}
+ 80005fe:	af00      	add	r7, sp, #0
+  // Check if EXTI13 triggered
+  if (EXTI->PR1 & EXTI_PR1_PIF13) {
+ 8000600:	4b0b      	ldr	r3, [pc, #44]	@ (8000630 <EXTI15_10_IRQHandler+0x34>)
+ 8000602:	695b      	ldr	r3, [r3, #20]
+ 8000604:	f403 5300 	and.w	r3, r3, #8192	@ 0x2000
+ 8000608:	2b00      	cmp	r3, #0
+ 800060a:	d00b      	beq.n	8000624 <EXTI15_10_IRQHandler+0x28>
+    EXTI->PR1 = EXTI_PR1_PIF13;	// 1. Clear the pending flag
+ 800060c:	4b08      	ldr	r3, [pc, #32]	@ (8000630 <EXTI15_10_IRQHandler+0x34>)
+ 800060e:	f44f 5200 	mov.w	r2, #8192	@ 0x2000
+ 8000612:	615a      	str	r2, [r3, #20]
+
+    // 3. Toggle system state
+    system_active ^= 1;     // Flip between 0 and 1
+ 8000614:	4b07      	ldr	r3, [pc, #28]	@ (8000634 <EXTI15_10_IRQHandler+0x38>)
+ 8000616:	781b      	ldrb	r3, [r3, #0]
+ 8000618:	b2db      	uxtb	r3, r3
+ 800061a:	f083 0301 	eor.w	r3, r3, #1
+ 800061e:	b2da      	uxtb	r2, r3
+ 8000620:	4b04      	ldr	r3, [pc, #16]	@ (8000634 <EXTI15_10_IRQHandler+0x38>)
+ 8000622:	701a      	strb	r2, [r3, #0]
+    } else {
+        turn_off_LED();     // System paused → LED OFF
+    }
+    */
+}
+}
+ 8000624:	bf00      	nop
+ 8000626:	46bd      	mov	sp, r7
+ 8000628:	f85d 7b04 	ldr.w	r7, [sp], #4
+ 800062c:	4770      	bx	lr
+ 800062e:	bf00      	nop
+ 8000630:	40010400 	.word	0x40010400
+ 8000634:	20000000 	.word	0x20000000
+
+08000638 <main>:
+// Global flag to indicate whether the PWM system is active or paused.
+// 1: System active (PWM follows throttle)
+// 0: System paused (PWM off)
+volatile uint8_t system_active = 1;
+
+int main(void){
+ 8000638:	b580      	push	{r7, lr}
+ 800063a:	b082      	sub	sp, #8
+ 800063c:	af00      	add	r7, sp, #0
+	//    In this sample, LED_On means system is running, LED_Off means paused.
+	//configure_LED_pin();
+	//turn_on_LED();       // Start with system active
+
+	// 2. Initialize the user pushbutton and configure EXTI interrupt.
+	button_init(); 	// The button interrupt will toggle 'system_active'
+ 800063e:	f7ff ff99 	bl	8000574 <button_init>
+	//    For example, SysTick_Init(400000) generates an interrupt every 0.1 s.
+	//SysTick_Init(400000);
+
+	// 4. Initialize ADC to read 0–3.3 V on the analog input (e.g., PC0 → ADC1_IN1).
+	//    ADC is configured in single-conversion, polling mode with 10-bit resolution.
+	ADC_Init();
+ 8000642:	f7ff fe25 	bl	8000290 <ADC_Init>
+
+	// 5. Initialize PWM output (e.g., TIM2_CH1 on PA5) to generate 0–100% duty cycle.
+	//    The PWM duty will be updated based on the ADC reading.
+	PWM_Init();
+ 8000646:	f7ff ff43 	bl	80004d0 <PWM_Init>
+	// 6. Main control loop:
+	//    - If system_active = 1: read throttle (ADC) and update PWM duty cycle.
+	//    - If system_active = 0: force PWM duty to 0% (output off).
+	while (1) {
+
+		if (system_active) {
+ 800064a:	4b09      	ldr	r3, [pc, #36]	@ (8000670 <main+0x38>)
+ 800064c:	781b      	ldrb	r3, [r3, #0]
+ 800064e:	b2db      	uxtb	r3, r3
+ 8000650:	2b00      	cmp	r3, #0
+ 8000652:	d008      	beq.n	8000666 <main+0x2e>
+			// System running:
+			// 1) Read one 10-bit ADC sample (0..1023) from the throttle input
+			uint16_t value = ADC_Read10bit();
+ 8000654:	f7ff fe90 	bl	8000378 <ADC_Read10bit>
+ 8000658:	4603      	mov	r3, r0
+ 800065a:	80fb      	strh	r3, [r7, #6]
+
+			// 2) Directly map ADC value to PWM duty (0..1023 → 0..100% duty)
+			PWM_SetDuty(value);
+ 800065c:	88fb      	ldrh	r3, [r7, #6]
+ 800065e:	4618      	mov	r0, r3
+ 8000660:	f7ff ff3e 	bl	80004e0 <PWM_SetDuty>
+ 8000664:	e7f1      	b.n	800064a <main+0x12>
+		} else {
+			// System paused:
+			// Force PWM output off (0% duty cycle)
+			PWM_SetDuty(0);
+ 8000666:	2000      	movs	r0, #0
+ 8000668:	f7ff ff3a 	bl	80004e0 <PWM_SetDuty>
+		if (system_active) {
+ 800066c:	e7ed      	b.n	800064a <main+0x12>
+ 800066e:	bf00      	nop
+ 8000670:	20000000 	.word	0x20000000
+
+08000674 <Reset_Handler>:
+
+  .section .text.Reset_Handler
+  .weak Reset_Handler
+  .type Reset_Handler, %function
+Reset_Handler:
+  ldr   r0, =_estack
+ 8000674:	480d      	ldr	r0, [pc, #52]	@ (80006ac <LoopForever+0x2>)
+  mov   sp, r0          /* set stack pointer */
+ 8000676:	4685      	mov	sp, r0
+/* Call the clock system initialization function.*/
+  bl  SystemInit
+ 8000678:	f3af 8000 	nop.w
+
+/* Copy the data segment initializers from flash to SRAM */
+  ldr r0, =_sdata
+ 800067c:	480c      	ldr	r0, [pc, #48]	@ (80006b0 <LoopForever+0x6>)
+  ldr r1, =_edata
+ 800067e:	490d      	ldr	r1, [pc, #52]	@ (80006b4 <LoopForever+0xa>)
+  ldr r2, =_sidata
+ 8000680:	4a0d      	ldr	r2, [pc, #52]	@ (80006b8 <LoopForever+0xe>)
+  movs r3, #0
+ 8000682:	2300      	movs	r3, #0
+  b LoopCopyDataInit
+ 8000684:	e002      	b.n	800068c <LoopCopyDataInit>
+
+08000686 <CopyDataInit>:
+
+CopyDataInit:
+  ldr r4, [r2, r3]
+ 8000686:	58d4      	ldr	r4, [r2, r3]
+  str r4, [r0, r3]
+ 8000688:	50c4      	str	r4, [r0, r3]
+  adds r3, r3, #4
+ 800068a:	3304      	adds	r3, #4
+
+0800068c <LoopCopyDataInit>:
+
+LoopCopyDataInit:
+  adds r4, r0, r3
+ 800068c:	18c4      	adds	r4, r0, r3
+  cmp r4, r1
+ 800068e:	428c      	cmp	r4, r1
+  bcc CopyDataInit
+ 8000690:	d3f9      	bcc.n	8000686 <CopyDataInit>
+
+/* Zero fill the bss segment. */
+  ldr r2, =_sbss
+ 8000692:	4a0a      	ldr	r2, [pc, #40]	@ (80006bc <LoopForever+0x12>)
+  ldr r4, =_ebss
+ 8000694:	4c0a      	ldr	r4, [pc, #40]	@ (80006c0 <LoopForever+0x16>)
+  movs r3, #0
+ 8000696:	2300      	movs	r3, #0
+  b LoopFillZerobss
+ 8000698:	e001      	b.n	800069e <LoopFillZerobss>
+
+0800069a <FillZerobss>:
+
+FillZerobss:
+  str  r3, [r2]
+ 800069a:	6013      	str	r3, [r2, #0]
+  adds r2, r2, #4
+ 800069c:	3204      	adds	r2, #4
+
+0800069e <LoopFillZerobss>:
+
+LoopFillZerobss:
+  cmp r2, r4
+ 800069e:	42a2      	cmp	r2, r4
+  bcc FillZerobss
+ 80006a0:	d3fb      	bcc.n	800069a <FillZerobss>
+
+
+/* Call static constructors */
+  bl __libc_init_array
+ 80006a2:	f000 f811 	bl	80006c8 <__libc_init_array>
+/* Call the application's entry point.*/
+
+  bl main
+ 80006a6:	f7ff ffc7 	bl	8000638 <main>
+
+080006aa <LoopForever>:
+
+LoopForever:
+  b LoopForever
+ 80006aa:	e7fe      	b.n	80006aa <LoopForever>
+  ldr   r0, =_estack
+ 80006ac:	20018000 	.word	0x20018000
+  ldr r0, =_sdata
+ 80006b0:	20000000 	.word	0x20000000
+  ldr r1, =_edata
+ 80006b4:	20000004 	.word	0x20000004
+  ldr r2, =_sidata
+ 80006b8:	08000730 	.word	0x08000730
+  ldr r2, =_sbss
+ 80006bc:	20000004 	.word	0x20000004
+  ldr r4, =_ebss
+ 80006c0:	20000028 	.word	0x20000028
+
+080006c4 <ADC1_2_IRQHandler>:
+ * @retval : None
+*/
+  .section .text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+  b Infinite_Loop
+ 80006c4:	e7fe      	b.n	80006c4 <ADC1_2_IRQHandler>
+	...
+
+080006c8 <__libc_init_array>:
+ 80006c8:	b570      	push	{r4, r5, r6, lr}
+ 80006ca:	4d0d      	ldr	r5, [pc, #52]	@ (8000700 <__libc_init_array+0x38>)
+ 80006cc:	4c0d      	ldr	r4, [pc, #52]	@ (8000704 <__libc_init_array+0x3c>)
+ 80006ce:	1b64      	subs	r4, r4, r5
+ 80006d0:	10a4      	asrs	r4, r4, #2
+ 80006d2:	2600      	movs	r6, #0
+ 80006d4:	42a6      	cmp	r6, r4
+ 80006d6:	d109      	bne.n	80006ec <__libc_init_array+0x24>
+ 80006d8:	4d0b      	ldr	r5, [pc, #44]	@ (8000708 <__libc_init_array+0x40>)
+ 80006da:	4c0c      	ldr	r4, [pc, #48]	@ (800070c <__libc_init_array+0x44>)
+ 80006dc:	f000 f818 	bl	8000710 <_init>
+ 80006e0:	1b64      	subs	r4, r4, r5
+ 80006e2:	10a4      	asrs	r4, r4, #2
+ 80006e4:	2600      	movs	r6, #0
+ 80006e6:	42a6      	cmp	r6, r4
+ 80006e8:	d105      	bne.n	80006f6 <__libc_init_array+0x2e>
+ 80006ea:	bd70      	pop	{r4, r5, r6, pc}
+ 80006ec:	f855 3b04 	ldr.w	r3, [r5], #4
+ 80006f0:	4798      	blx	r3
+ 80006f2:	3601      	adds	r6, #1
+ 80006f4:	e7ee      	b.n	80006d4 <__libc_init_array+0xc>
+ 80006f6:	f855 3b04 	ldr.w	r3, [r5], #4
+ 80006fa:	4798      	blx	r3
+ 80006fc:	3601      	adds	r6, #1
+ 80006fe:	e7f2      	b.n	80006e6 <__libc_init_array+0x1e>
+ 8000700:	08000728 	.word	0x08000728
+ 8000704:	08000728 	.word	0x08000728
+ 8000708:	08000728 	.word	0x08000728
+ 800070c:	0800072c 	.word	0x0800072c
+
+08000710 <_init>:
+ 8000710:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8000712:	bf00      	nop
+ 8000714:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8000716:	bc08      	pop	{r3}
+ 8000718:	469e      	mov	lr, r3
+ 800071a:	4770      	bx	lr
+
+0800071c <_fini>:
+ 800071c:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 800071e:	bf00      	nop
+ 8000720:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8000722:	bc08      	pop	{r3}
+ 8000724:	469e      	mov	lr, r3
+ 8000726:	4770      	bx	lr
