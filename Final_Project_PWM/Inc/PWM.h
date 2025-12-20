@@ -2,7 +2,7 @@
  * PWM.h
  *
  *  Created on: Dec 4, 2025
- *      Author: MES.Academic
+ *      Author: Elias Asami, Milton Salazar
  */
 
 #ifndef __STM32L476G_PWM_H
@@ -28,7 +28,8 @@ void PWM_Init(void);
 
 // Modular function to set PWM duty cycle.
 // Input 'duty' is a 10-bit value: 0 (0%) to 1023 (≈100%).
-void PWM_SetDuty(uint16_t duty);
+void PWM_SetPulse_us(uint16_t us);
+
 
 #endif /* __STM32L476G_PWM_H */
 

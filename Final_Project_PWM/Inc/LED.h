@@ -1,3 +1,9 @@
+/*
+ * LED.h
+ *
+ *  Created on: Dec 4, 2025
+ *      Author: Elias Asami, Milton Salazar
+ */
 #ifndef __STM32L476G_LED_H
 #define __STM32L476G_LED_H
 

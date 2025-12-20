@@ -1,3 +1,9 @@
+/*
+ * LED.c
+ *
+ *  Created on: Dec 4, 2025
+ *      Author: Elias Asami, Milton Salazar
+ */
 #include "LED.h"
 
 // PA5  <--> Green LED

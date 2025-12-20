@@ -2,7 +2,7 @@
  * ADC.h
  *
  *  Created on: Dec 4, 2025
- *      Author: MES.Academic
+ *      Author: Elias Asami, Milton Salazar
  */
 
 #ifndef __STM32L476G_ADC_H

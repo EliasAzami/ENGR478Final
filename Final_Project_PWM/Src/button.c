@@ -1,58 +1,72 @@
 /*
  * button.c
  *
- *  Created on: Nov 2025
- *      Author: Milton Salazar
+ *  Created on: Dec 4, 2025
+ *      Author: Elias Asami, Milton Salazar
  */
 #include "button.h"
 #include "LED.h"
+#include "PWM.h"
 #include "Systick_timer.h"
+#include "stm32l476xx.h"
+#include <stdint.h>
 
-// system_active is defined in main.c
-extern volatile uint8_t system_active;
+// Flags are defined in main.c
+extern volatile uint8_t  system_active;
+extern volatile uint8_t  system_arming;
+extern volatile uint32_t arming_ms;
 
 // PC13  <--> Blue User Button
 #define BUTTON_PIN   13
+#define PWM_STOP_TICKS  1000
 
+void button_Init(void) {
+    // 1. Enable the clock to GPIO Port C
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
 
-void button_init() {
-  // 1. Enable the clock to GPIO Port C
-  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+    // 2. Configure PC13 as input
+    GPIOC->MODER &= ~(3UL << (2 * BUTTON_PIN));    // Input(00)
 
-  // 2. Configure GPIO Mode to Input
-  GPIOC->MODER &= ~(3UL << (2 * BUTTON_PIN));    // Input(00)
+    // 3. No pull-up or pull-down
+    GPIOC->PUPDR &= ~(3UL << (2 * BUTTON_PIN));
 
-  // 3. Configure GPIO Pull-Up/Pull-Down
-  GPIOC->PUPDR &= ~(3UL << (2 * BUTTON_PIN)); // No Pull-up or Pull-down
+    // 4. Configure EXTI line 13 to be triggered by PC13
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;              // Enable SYSCFG clock
+    SYSCFG->EXTICR[3] &= ~(SYSCFG_EXTICR4_EXTI13);
+    SYSCFG->EXTICR[3] |=  SYSCFG_EXTICR4_EXTI13_PC;    // EXTI13 <- PC13
 
-  // 4. Configure EXTI line 13 to be triggered by PC13
-  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;           // Enable SYSCFG clock
-  SYSCFG->EXTICR[3] &= ~(SYSCFG_EXTICR4_EXTI13);  // Clear existing setting
-  SYSCFG->EXTICR[3] |=  (SYSCFG_EXTICR4_EXTI13_PC); // Set EXTI13 to PC13
+    // 5. Enable falling-edge trigger on line 13
+    EXTI->IMR1  |=  EXTI_IMR1_IM13;     // Unmask
+    EXTI->FTSR1 |=  EXTI_FTSR1_FT13;    // Falling edge
+    EXTI->PR1    =  EXTI_PR1_PIF13;     // Clear any pending flag
 
-  // 5. Configure EXTI Trigger for falling edge (button press pulls PC13 low)
-  EXTI->IMR1  |=  (EXTI_IMR1_IM13);    // Unmask EXTI13 line
-  EXTI->FTSR1 |=  (EXTI_FTSR1_FT13);   // Enable falling-edge trigger
-  EXTI->PR1    =  (EXTI_PR1_PIF13);    // Clear any pending flag
-
-  // 6. Enable EXTI15_10 interrupt in NVIC
-  NVIC_EnableIRQ(EXTI15_10_IRQn);
+    // 6. Enable EXTI15_10 interrupt in NVIC
+    NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 void EXTI15_10_IRQHandler(void) {
-  // Check if EXTI13 triggered
-  if (EXTI->PR1 & EXTI_PR1_PIF13) {
-    EXTI->PR1 = EXTI_PR1_PIF13;	// 1. Clear the pending flag
+    // Check if EXTI13 triggered
+    if (EXTI->PR1 & EXTI_PR1_PIF13) {
+        EXTI->PR1 = EXTI_PR1_PIF13;   // Clear pending flag
 
-    // 3. Toggle system state
-    system_active ^= 1;     // Flip between 0 and 1
+        if (system_active) {
+            // ARMED → DISARMED
+            system_active = 0;
+            system_arming = 0;
+            arming_ms     = 0;
 
-    // 4. Update status LED based on system state
-  /*  if (system_active) {
-        turn_on_LED();      // System active → LED ON
-    } else {
-        turn_off_LED();     // System paused → LED OFF
+            // Immediately force PWM to STOP pulse (e.g., 1 ms pulse)
+            PWM_SetPulse_us(PWM_STOP_TICKS);
+            // Stop LED (SysTick_Handler will keep it off while inactive)
+            turn_off_LED();
+        }
+        else if (!system_arming) {
+            // DISARMED → start ARMING sequence
+            system_arming = 1;
+            arming_ms     = 0;
+
+            // Start from LED off; SysTick will fast blink during arming
+            turn_off_LED();
+        }
     }
-    */
-}
 }

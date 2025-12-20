@@ -2,7 +2,7 @@
  * ADC.c
  *
  *  Created on: Dec 4, 2025
- *      Author: MES.Academic
+ *      Author: Elias Asami, Milton Salazar
  */
 #include "ADC.h"
 #include "stm32l476xx.h"

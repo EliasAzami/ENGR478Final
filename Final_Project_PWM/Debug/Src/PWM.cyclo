@@ -1,4 +1,4 @@
 ../Src/PWM.c:20:6:PWM_Pin_Init	1
-../Src/PWM.c:46:6:PWM_Timer_Init	1
-../Src/PWM.c:96:6:PWM_Init	1
-../Src/PWM.c:114:6:PWM_SetDuty	2
+../Src/PWM.c:42:6:PWM_Timer_Init	1
+../Src/PWM.c:83:6:PWM_Init	1
+../Src/PWM.c:94:6:PWM_SetPulse_us	3
